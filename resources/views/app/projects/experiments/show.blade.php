@@ -51,7 +51,12 @@
         @endslot
     @endcomponent
 
+    <div class="col-10">
+        {!! $chart->container() !!}
+    </div>
+
     @push('scripts')
+        {!! $chart->script() !!}
         <script>
             $(document).ready(() => {
                 $('select').on('change', () => {

@@ -11,8 +11,10 @@ class AttributeHeader
     public $attrType;
 
     private static $entityKeywords = [
-        "s"      => true,
-        "sample" => true,
+        "s"           => true,
+        "sample"      => true,
+        "m"           => true,
+        "measurement" => true,
     ];
 
     private static $activityKeywords = [

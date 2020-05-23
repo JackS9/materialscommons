@@ -19,6 +19,7 @@ window.mcutil = require('./util');
 // window.Intercooler = require('intercooler');
 window.xlsx = require('xlsx');
 window.datagrid = require('canvas-datagrid');
+require('chart.js');
 
 window.Uppy = require('@uppy/core');
 window.UppyXHRUpload = require('@uppy/xhr-upload');
