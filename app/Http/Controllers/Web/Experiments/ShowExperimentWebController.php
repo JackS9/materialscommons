@@ -66,3 +66,11 @@ class ShowExperimentWebController extends Controller
         return view('app.projects.experiments.show', compact('project', 'experiment', 'workflows', 'chart'));
     }
 }
+
+/*
+ * Evaluate PHP string and get results:
+ *
+ * $str = "return App\Models\Experiment::with('entities.entityStates.attributes.values')->findOrFail(7);";
+ * $experiment = eval($str);
+ *
+ */
