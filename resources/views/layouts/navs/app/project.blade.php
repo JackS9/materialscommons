@@ -32,17 +32,21 @@
                     </a>
 
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                        <a class="dropdown-item td-none" href="{{route('projects.experiments.create', [$project])}}">
-                            Experiment
-                        </a>
-
                         <a class="dropdown-item td-none" href="{{route('projects.datasets.create', [$project])}}">
                             Dataset
+                        </a>
+
+                        <a class="dropdown-item td-none" href="{{route('projects.experiments.create', [$project])}}">
+                            Experiment
                         </a>
 
                         <a class="dropdown-item td-none"
                            href="{{route('projects.upload-files', [$project])}}">
                             Files
+                        </a>
+
+                        <a class="dropdown-item td-none" href="#">
+                            Report
                         </a>
 
                         <a class="dropdown-item td-none" href="{{route('projects.entities.create', [$project])}}">
@@ -54,6 +58,12 @@
                         </a>
                     </div>
                 </div>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link fs-11 ml-5" href="">
+                    <i class="fa-fw fas fa-chart-line mr-2"></i> Reports
+                </a>
             </li>
 
             <li class="nav-item">
