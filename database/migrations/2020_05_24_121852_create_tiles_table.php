@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateReportTilesTable extends Migration
+class CreateTilesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,17 +13,11 @@ class CreateReportTilesTable extends Migration
      */
     public function up()
     {
-        Schema::create('report_tiles', function (Blueprint $table) {
+        Schema::create('tiles', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid')->unique();
             $table->string('name');
-            $table->text('description')->nullable();
-
-            $table->unsignedBigInteger('report_id');
-            $table->foreign('report_id')
-                  ->references('id')
-                  ->on('reports')
-                  ->onDelete('cascade');
+            $table->text('summary')->nullable();
 
             $table->unsignedBigInteger('owner_id');
             $table->foreign('owner_id')
@@ -49,6 +43,10 @@ class CreateReportTilesTable extends Migration
                   ->nullable();
 
             $table->json('options')->nullable();
+
+            $table->integer('index')->unsigned();
+
+            $table->nullableMorphs('item');
 
             $table->timestamps();
         });

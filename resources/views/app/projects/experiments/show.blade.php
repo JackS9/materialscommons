@@ -51,7 +51,7 @@
         @endslot
     @endcomponent
 
-    <div class="col-10">
+    <div class="col-5">
         {!! $chart->container() !!}
     </div>
 

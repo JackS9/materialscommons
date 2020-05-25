@@ -73,7 +73,8 @@
     "files": [
       "app/Helpers/ViewHelpers.php",
       "app/Helpers/HelpHelpers.php",
-      "app/Helpers/BannerHelpers.php"
+      "app/Helpers/BannerHelpers.php",
+      "app/Helpers/FileHelpers.php"
     ]
   },
   "autoload-dev": {

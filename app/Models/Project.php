@@ -85,6 +85,11 @@ class Project extends Model implements Searchable
         return $this->hasMany(Dataset::class, 'project_id');
     }
 
+    public function reports()
+    {
+        return $this->hasMany(Report::class, 'project_id');
+    }
+
     public function rootDir()
     {
         return $this->hasOne(File::class, 'project_id')

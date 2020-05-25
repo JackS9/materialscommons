@@ -6,9 +6,11 @@ use BenSampo\Enum\Enum;
 
 final class TileType extends Enum
 {
-    const Text = 0;
-    const Markdown = 1;
-    const Chart = 2;
-    const Table = 3;
-    const File = 4;
+    const Notset = 0;
+    const Text = 1;
+    const File = 2;
+    const Chart = 3;
+    const Markdown = 4;
+    const Table = 5;
+
 }

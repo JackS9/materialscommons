@@ -2,10 +2,10 @@
 
 /** @var \Illuminate\Database\Eloquent\Factory $factory */
 
-use App\Models\ReportTile;
+use App\Models\Tile;
 use Faker\Generator as Faker;
 
-$factory->define(ReportTile::class, function (Faker $faker) {
+$factory->define(Tile::class, function (Faker $faker) {
     return [
         //
     ];

@@ -19,7 +19,7 @@ Route::get('/projects/{project}/reports/create', CreateProjectReportWebControlle
 Route::post('/projects/{project}/reports', StoreProjectReportWebController::class)
      ->name('projects.reports.store');
 
-Route::post('/projects/{project}/reports/{report}', ShowProjectReportWebController::class)
+Route::get('/projects/{project}/reports/{report}', ShowProjectReportWebController::class)
      ->name('projects.reports.show');
 
 Route::get('/projects/{project}/reports/{report}/edit', EditProjectReportWebController::class)
