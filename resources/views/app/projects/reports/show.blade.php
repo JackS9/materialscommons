@@ -7,6 +7,7 @@
 @stop
 
 @section('content')
+    <h6>{{$report->name}}</h6>
     <div class="row">
         <div class="col-5 bg-grey-9">
             @include('app.projects.reports.show-tile', ['tile' => $tiles[0]])

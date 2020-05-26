@@ -1,4 +1,5 @@
-<div class="mt-2">
+<div class="mt-2 mb-2">
+    <h6>{{$tile->file->name}}</h6>
     @if(fileExists($tile->file))
         @switch(fileType2($tile->file))
             @case("image")
