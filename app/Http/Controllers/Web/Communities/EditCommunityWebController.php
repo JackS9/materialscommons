@@ -7,8 +7,11 @@ use App\Models\Community;
 
 class EditCommunityWebController extends Controller
 {
-    public function __invoke(Community $community)
+    public function __invoke($communityId)
     {
-        return view('app.communities.edit', compact('community'));
+        return view('app.communities.edit', [
+            'community' => Community::with('datasets')->findOrFail($communityId),
+            'user'      => auth()->user(),
+        ]);
     }
 }

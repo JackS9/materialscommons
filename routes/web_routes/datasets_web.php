@@ -17,8 +17,10 @@ use App\Http\Controllers\Web\Datasets\EditDatasetSamplesWebController;
 use App\Http\Controllers\Web\Datasets\EditDatasetWebController;
 use App\Http\Controllers\Web\Datasets\EditDatasetWorkflowsWebController;
 use App\Http\Controllers\Web\Datasets\EditDatasetWorkflowWebController;
+use App\Http\Controllers\Web\Datasets\ImportDatasetIntoProjectWebController;
 use App\Http\Controllers\Web\Datasets\IndexDatasetsWebController;
 use App\Http\Controllers\Web\Datasets\PublishDatasetWebController;
+use App\Http\Controllers\Web\Datasets\RefreshPublishedDatasetWebController;
 use App\Http\Controllers\Web\Datasets\ShowDatasetActivitiesWebController;
 use App\Http\Controllers\Web\Datasets\ShowDatasetAndFolderWebController;
 use App\Http\Controllers\Web\Datasets\ShowDatasetCommunitiesWebController;
@@ -26,11 +28,13 @@ use App\Http\Controllers\Web\Datasets\ShowDatasetEntitiesWebController;
 use App\Http\Controllers\Web\Datasets\ShowDatasetExperimentsWebController;
 use App\Http\Controllers\Web\Datasets\ShowDatasetWebController;
 use App\Http\Controllers\Web\Datasets\ShowDatasetWorkflowsWebController;
+use App\Http\Controllers\Web\Datasets\ShowImportDatasetIntoProjectWebController;
 use App\Http\Controllers\Web\Datasets\StoreDatasetWebController;
 use App\Http\Controllers\Web\Datasets\StoreDatasetWithDoiWebController;
 use App\Http\Controllers\Web\Datasets\StoreDatasetWorkflowFromEditWebController;
 use App\Http\Controllers\Web\Datasets\UnpublishDatasetWebController;
 use App\Http\Controllers\Web\Datasets\UpdateDatasetWebController;
+use App\Http\Controllers\Web\Datasets\UpdateDatasetWorkflowFromEditWebController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/projects/{project}/datasets', IndexDatasetsWebController::class)
@@ -62,6 +66,10 @@ Route::get('/projects/{project}/datasets/{dataset}/edit/workflows/create',
 Route::post('/projects/{project}/datasets/{dataset}/edit/workflows/store',
     StoreDatasetWorkflowFromEditWebController::class)
      ->name('projects.datasets.workflows.edit.store');
+
+Route::put('/projects/{project}/datasets/{dataset}/edit/workflows/{workflow}/update',
+    UpdateDatasetWorkflowFromEditWebController::class)
+     ->name('projects.datasets.workflows.edit.update');
 
 Route::get('/projects/{project}/datasets/{dataset}/edit/workflows/{workflow}', EditDatasetWorkflowWebController::class)
      ->name('projects.datasets.workflows.edit.workflow');
@@ -135,8 +143,18 @@ Route::post('/projects/{project}/datasets/create-doi', StoreDatasetWithDoiWebCon
 Route::get('/projects/{project}/datasets/{dataset}/publish', PublishDatasetWebController::class)
      ->name('projects.datasets.publish');
 
+Route::get('/projects/{project}/datasets/{dataset}/refresh', RefreshPublishedDatasetWebController::class)
+     ->name('projects.datasets.refresh');
+
 Route::get('/projects/{project}/datasets/{dataset}/unpublish', UnpublishDatasetWebController::class)
      ->name('projects.datasets.unpublish');
+
+// Don't use {project} because we don't want middleware to run that checks that dataset is in project
+Route::post('/projects/{p}/datasets/{dataset}/import', ImportDatasetIntoProjectWebController::class)
+     ->name('projects.datasets.import');
+
+Route::get('/projects/{p}/datasets/{dataset}/import', ShowImportDatasetIntoProjectWebController::class)
+     ->name('projects.datasets.import-into-project');
 
 
 

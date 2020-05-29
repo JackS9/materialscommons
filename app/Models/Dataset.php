@@ -79,6 +79,11 @@ class Dataset extends Model implements Searchable
         return $this->belongsToMany(Activity::class, 'dataset2activity', 'dataset_id', 'activity_id');
     }
 
+    public function usedInProjects()
+    {
+        return $this->belongsToMany(Project::class, 'project2imported_dataset', 'dataset_id', 'project_id');
+    }
+
     public function files()
     {
         return $this->belongsToMany(File::class, 'dataset2file', 'dataset_id', 'file_id');
@@ -118,6 +123,11 @@ class Dataset extends Model implements Searchable
     public function getTypeAttribute()
     {
         return "dataset";
+    }
+
+    public function canEdit()
+    {
+        return $this->owner_id == auth()->user()->id || auth()->user()->is_admin;
     }
 
     public function getSearchResult(): SearchResult
@@ -169,5 +179,33 @@ class Dataset extends Model implements Searchable
     public function privateGlobusPathPartial()
     {
         return "__datasets/{$this->uuid}";
+    }
+
+    public function isPublished()
+    {
+        return !is_null($this->published_at);
+    }
+
+    public function importDirectory()
+    {
+        $now = now()->toIso8601String();
+        return Str::of("importedDataset-{$now}-{$this->name}")
+                  ->slug()
+                  ->limit(60)
+                  ->rtrim('.')
+                  ->rtrim('-')
+                  ->__toString();
+    }
+
+    public function isInCommunity($communityId)
+    {
+        $this->communities->contains(function (Community $community) use ($communityId) {
+            return $community->id == $communityId;
+        });
+    }
+
+    public function hasFile($fileId)
+    {
+        return $this->files()->where('file_id', $fileId)->count() != 0;
     }
 }
