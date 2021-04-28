@@ -37,6 +37,10 @@ class UpdateDatasetAction
             unset($data['existing_papers']);
         }
 
+        if (isset($data['ds_authors']) && sizeof($data['ds_authors']) != 0) {
+            $data['authors'] = collect($data['ds_authors'])->implode('name', '; ');
+        }
+
         $this->loadTagsFromData($data);
         unset($data['tags']);
 

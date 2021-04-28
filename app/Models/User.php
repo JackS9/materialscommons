@@ -89,4 +89,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->communities->count() > 0;
     }
+
+    public function datasets()
+    {
+        return $this->morphToMany(Dataset::class, 'item', 'item2dataset');
+    }
 }

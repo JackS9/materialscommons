@@ -31,6 +31,8 @@ require('@uppy/core/dist/style.css');
 require('@uppy/dashboard/dist/style.css');
 window.Tagify = require('@yaireo/tagify');
 
+// 
+
 // const Turbolinks = require("turbolinks");
 // Turbolinks.start();
 

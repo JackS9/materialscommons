@@ -22,12 +22,16 @@
                placeholder="Name...">
     </div>
 
-    <div class="form-group">
-        <label for="authors">Authors and Affiliations</label>
-        <input class="form-control" id="authors" name="authors" type="text"
-               value="{{old('authors', $authorsAndAffiliations)}}"
-               placeholder="Authors...">
-    </div>
+    <x-datasets.create-authors-table :project="$project" :dataset="null"/>
+    <div id="authors_list"></div>
+    <br>
+
+    {{--    <div class="form-group">--}}
+    {{--        <label for="authors">Authors and Affiliations</label>--}}
+    {{--        <input class="form-control" id="authors" name="authors" type="text"--}}
+    {{--               value="{{old('authors', $authorsAndAffiliations)}}"--}}
+    {{--               placeholder="Authors...">--}}
+    {{--    </div>--}}
 
     <div class="form-group">
         <label for="summary">Summary</label>
@@ -138,6 +142,7 @@
 
 @push('scripts')
     <script>
+        let nextId = 0;
         $(document).ready(() => {
             validate();
             $('#name').change(validate).keypress(() => validate());
@@ -166,7 +171,40 @@
 
         function setActionAndSubmit(action) {
             $('#action').val(action);
+            let authorsListElement = document.getElementById('authors_list');
+
+            // authorTable is defined in the include create-authors-table.blade.php
+            let values = [];
+            authorTable.rows().data().each(row => values.push(createAuthorElement(row[2], row[3], row[4])));
+            for (let i = 0; i < values.length; i++) {
+                let author = values[i];
+                let nameInput = document.createElement("input");
+                nameInput.type = "hidden";
+                nameInput.name = `ds_authors[${i}][name]`;
+                nameInput.value = author.name;
+                authorsListElement.appendChild(nameInput);
+
+                let emailInput = document.createElement("input");
+                emailInput.type = "hidden";
+                emailInput.name = `ds_authors[${i}][email]`;
+                emailInput.value = author.email;
+                authorsListElement.appendChild(emailInput);
+
+                let affiliationsInput = document.createElement("input");
+                affiliationsInput.type = "hidden";
+                affiliationsInput.name = `ds_authors[${i}][affiliations]`;
+                affiliationsInput.value = author.affiliations;
+                authorsListElement.appendChild(affiliationsInput);
+            }
             document.getElementById('dataset_create').submit();
+        }
+
+        function createAuthorElement(name, affiliations, email) {
+            return {
+                name: name,
+                affiliations: affiliations,
+                email: email,
+            };
         }
 
         function changeActionAndSubmit() {
