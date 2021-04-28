@@ -12668,6 +12668,10 @@ body {
   font-weight: bold;
 }
 
+.cursor-move {
+  cursor: move;
+}
+
 .uppy-Root {
   padding-left: 400px;
 }
