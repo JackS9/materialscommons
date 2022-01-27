@@ -2,8 +2,8 @@
     @foreach($activity->entityStates as $es)
         @if($es->pivot->direction == "out")
             @foreach($es->attributes as $attr)
-                <dt class="col-7">{{$attr->name}}:</dt>
-                <dd class="col-4">
+                <dt class="col-3">{{$attr->name}}:</dt>
+                <dd class="col-7">
                     @if(is_array($attr->values[0]->val["value"]))
                         @json($attr->values[0]->val["value"], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                     @else

@@ -38,7 +38,7 @@
 
             <div class="row ml-1">
                 @foreach($activities as $activity)
-                    <div class="col-lg-5 col-md-10 col-sm-10 ml-2 mt-2 rounded border-blue border">
+                    <div class="col-lg-12 col-md-12 col-sm-12 mt-2 rounded border-blue border">
                         @include('partials.activities.activity-card', ['activity' => $activity])
                     </div>
                 @endforeach

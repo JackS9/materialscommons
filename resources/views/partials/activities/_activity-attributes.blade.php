@@ -1,7 +1,7 @@
 <dl class="row ml-2">
     @foreach($activity->attributes as $attribute)
-        <dt class="col-7">{{$attribute->name}}:</dt>
-        <dd class="col-4">
+        <dt class="col-3">{{$attribute->name}}:</dt>
+        <dd class="col-7">
             @if(is_array($attribute->values[0]->val["value"]))
                 @json($attribute->values[0]->val["value"], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
             @else

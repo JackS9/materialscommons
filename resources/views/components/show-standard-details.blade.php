@@ -16,4 +16,27 @@
     @elseif (!blank($item->summary))
         <x-show-summary :summary="$item->summary"/>
     @endif
+
+    <div class=" ml-2">
+        <div class="form-check form-check-inline">
+            <label class="form-check-label">Hide:</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" id="cb_sum_desc" type="checkbox">
+            <label class="form-check-label" for="cb_sum_desc">Descriptions</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" id="cb_process_attrs" type="checkbox">
+            <label class="form-check-label" for="cb_process_attrs">Process Attributes</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" id="cb_measurements" type="checkbox">
+            <label class="form-check-label" for="cb_measurements">Measurements</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" id="cb_files" type="checkbox">
+            <label class="form-check-label" for="cb_files">Files</label>
+        </div>
+        <input type="text" class="form-control" placeholder="search...">
+    </div>
 </form>
