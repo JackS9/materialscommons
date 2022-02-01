@@ -81,9 +81,10 @@ class CreateFileAction
     private function matchingFileInDir($directoryId, $checksum, $name)
     {
         return File::where('checksum', $checksum)
-            ->where('directory_id', $directoryId)
-            ->where('name', $name)
-            ->first();
+                   ->where('directory_id', $directoryId)
+                   ->whereNull('deleted_at')
+                   ->where('name', $name)
+                   ->first();
     }
 
 }
