@@ -62,8 +62,77 @@
                     Samples
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link fs-11" href="#" style="margin-left: 3.75rem">
+                    Aging Analysis
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link fs-11" href="#" style="margin-left: 3.75rem">
+                    Aging HT
+                </a>
+            </li>
 
-            @if(isInBeta())
+            <li class="nav-item">
+                <a class="nav-link fs-11" href="#" style="margin-left: 3.75rem">
+                    Create Samples
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link fs-11" href="#" style="margin-left: 3.75rem">
+                    Extrusion
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link fs-11" href="#" style="margin-left: 3.75rem">
+                   Hardness Test
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link fs-11" href="#" style="margin-left: 3.75rem">
+                    Solution HT
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link fs-11" href="#" style="margin-left: 3.75rem">
+                    A Long One That Will Overflow To See What It Looks Like
+                </a>
+            </li>
+
+            <li class="nav-item mt-2">
+                <span class="ml-5">Page Actions</span>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link fs-11 ml-5" href="#">
+                    Toggle Descriptions
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link fs-11 ml-5" href="#">
+                    Toggle Process Attributes
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link fs-11 ml-5" href="#">
+                    Toggle Measurements
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link fs-11 ml-5" href="#">
+                    Search
+                </a>
+            </li>
+
+
+        @if(isInBeta())
                 <li class="nav-item">
                     <a class="nav-link fs-11 ml-5 {{setActiveNavByName('projects.data-explorer')}}"
                        href="{{route('projects.data-explorer.samples', [$project])}}">
