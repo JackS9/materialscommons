@@ -44,6 +44,7 @@ Route::post('login', [LoginController::class, 'login']);
 Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('register', [RegisterController::class, 'register']);
+Route::get('reload-captcha', [RegisterController::class, 'reloadCaptcha'])->name('reload-captcha');
 
 Route::get('login-for-upload', [LoginController::class, 'showLoginForm'])->name('login-for-upload');
 Route::post('login-for-upload', [LoginController::class, 'login'])->name('login-for-upload');
@@ -56,9 +57,9 @@ Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEm
 Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
 Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.update');
 
-Route::get('/email/verify', [VerificationController::class, 'show'])->name('verification.notice');
+Route::get('/email/verify/{id}', [VerificationController::class, 'show'])->name('verification.notice');
 Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])->name('verification.verify');
-Route::get('/email/verification-notification', [VerificationController::class, 'resend'])->name('verification.resend');
+Route::get('/email/verification-notification/{email}', [VerificationController::class, 'resend'])->name('verification.resend');
 
 //Route::get('')
 
