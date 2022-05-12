@@ -58,6 +58,9 @@ trait FileType
 
     public function fileType($file): string
     {
+        if (Str::endsWith($file->name, ".casm")) {
+            return "casm";
+        }
         return $this->fileTypeFromMime($file->mime_type);
     }
 

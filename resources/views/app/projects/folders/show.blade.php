@@ -70,6 +70,20 @@
                         <i class="fas fa-fw fa-edit mr-2"></i>Rename
                     </a>
                 @endif
+
+                <div class="float-right dropdown">
+                    <a class=" action-link mr-4 dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-expanded="false">
+                        Visualization Tools
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                        <a class="dropdown-item td-none" href="{{config('visus.url')}}" target="_blank">OpenVisus</a>
+                        <a class="dropdown-item td-none" href="http://localhost:5006/crossfilter" target="_blank">CASM Supercell viewer</a>
+                        <a class="dropdown-item td-none" href="http://localhost:5006/crossfilter" target="_blank">CASM Monte Carlo viewer</a>
+                        <a class="dropdown-item td-none" href="http://localhost:5006/crossfilter" target="_blank">CASM Structure Mapper</a>
+                        <a class="dropdown-item td-none" href="http://localhost:5006/crossfilter" target="_blank">PRISMS-PF Microstructure Viewer</a>
+                        <a class="dropdown-item td-none" href="http://localhost:5006/crossfilter" target="_blank">PRISMS-PF Shape Calculator</a>
+                    </div>
+                </div>
         </x-slot>
 
         <x-slot name="body">
