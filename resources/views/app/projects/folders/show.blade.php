@@ -73,7 +73,8 @@
 
                 <div class="float-right dropdown">
                     <a class=" action-link mr-4 dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-expanded="false">
-                        Visualization Tools
+                        <i class="fas fa-fw fa-play-circle mr-1"></i>
+                         Run Tools/Apps
                     </a>
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
                         <a class="dropdown-item td-none" href="{{config('visus.url')}}" target="_blank">OpenVisus</a>

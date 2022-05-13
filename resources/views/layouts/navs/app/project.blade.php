@@ -146,6 +146,29 @@
             </li>
 
             <li class="nav-item">
+                <div class="dropdown">
+                    <a class="nav-link fs-11 ml-5 dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                       data-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-fw fa-play-circle mr-1"></i>
+                        Run Tools/Apps
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                        <a class="dropdown-item td-none" href="{{config('visus.url')}}" target="_blank">OpenVisus</a>
+                        <a class="dropdown-item td-none" href="http://localhost:5006/crossfilter" target="_blank">CASM
+                            Supercell viewer</a>
+                        <a class="dropdown-item td-none" href="http://localhost:5006/crossfilter" target="_blank">CASM
+                            Monte Carlo viewer</a>
+                        <a class="dropdown-item td-none" href="http://localhost:5006/crossfilter" target="_blank">CASM
+                            Structure Mapper</a>
+                        <a class="dropdown-item td-none" href="http://localhost:5006/crossfilter" target="_blank">PRISMS-PF
+                            Microstructure Viewer</a>
+                        <a class="dropdown-item td-none" href="http://localhost:5006/crossfilter" target="_blank">PRISMS-PF
+                            Shape Calculator</a>
+                    </div>
+                </div>
+            </li>
+
+            <li class="nav-item">
                 <a class="nav-link fs-11 ml-5 {{setActiveNavByName('projects.globus.uploads.index')}}"
                    href="{{route('projects.globus.uploads.index', [$project])}}">
                     <i class="fa-fw fas fa-cloud-upload-alt mr-2"></i>
