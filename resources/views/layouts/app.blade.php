@@ -202,6 +202,10 @@
 @endauth
 @include('app.dialogs._help-dialog')
 @include('app.dialogs._welcome-dialog')
+@if(isset($project))
+    @include('app.dialogs._scp-dialog')
+    @include('app.dialogs._sftp-dialog')
+@endif
 
 {{--@livewireAssets--}}
 <script>

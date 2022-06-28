@@ -162,6 +162,20 @@
             </li>
 
             <li class="nav-item">
+                <a class="nav-link fs-11 ml-5" data-toggle="modal" href="#scp-dialog">
+                    <i class="fa-fw fas fa-cloud-upload-alt"></i>
+                    SCP Upload/Download
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link fs-11 ml-5" data-toggle="modal" href="#sftp-dialog">
+                    <i class="fa-fw fas fa-cloud-upload-alt"></i>
+                    SFTP Upload/Download
+                </a>
+            </li>
+
+            <li class="nav-item">
                 <a class="nav-link fs-11 ml-5" href="{{route('projects.datasets.create', [$project])}}">
                     <i class="fa-fw fas fa-file-export mr-2"></i>
                     Publish
