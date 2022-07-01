@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\api\ProjectActionsAPIController;
 use App\Http\Controllers\api\ProjectEntitiesAPIController;
+use App\Http\Controllers\api\MaterialsApiController;
 use App\Http\Controllers\api\Projects\ActionAttributesAPIController;
 use App\Http\Controllers\api\Projects\ActionEntityStatesAPIController;
 use App\Http\Controllers\api\Projects\ActionFilesAPIController;
@@ -47,7 +48,10 @@ Route::group(['middleware' => 'auth:api'], function() {
     require base_path('routes/api_routes/activities_entity_states_api.php');
 
     // Entities
-    require base_path('routes/api_routes/entities_api.php');
+    //require base_path('routes/api_routes/entities_api.php');
+
+    // Materials -- using apiResource method below
+    //require base_path('routes/api_routes/materials_api.php');
 
     // Files
     require base_path('routes/api_routes/files_api.php');
@@ -77,6 +81,7 @@ Route::group(['middleware' => 'auth:api'], function() {
     require base_path('routes/api_routes/query_api.php');
 });
 
+Route::apiResource('materials',\App\Http\Controllers\MaterialsApiController::class);
 Route::post('/get_apitoken', GetApiTokenApiController::class);
 
 // Published Datasets
