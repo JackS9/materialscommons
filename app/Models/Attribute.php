@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $uuid
  * @property string name
  * @property string description
+ * @property mixed marked_important_at
  *
  * @mixin Builder
  */
@@ -21,6 +22,8 @@ class Attribute extends Model
     use HasFactory;
 
     protected $guarded = ['id'];
+
+    protected $dates = ['marked_important_at'];
 
     protected $casts = [
         'attributable_id' => 'integer',

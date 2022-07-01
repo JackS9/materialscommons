@@ -7,14 +7,14 @@ use App\Models\TbdFile;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
-class DeleteOldTrashcanFilesCommand extends Command
+class DeleteExpiredTrashcanFilesCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'mc:delete-old-trashcan-files';
+    protected $signature = 'mc:delete-expired-trashcan-files';
 
     /**
      * The console command description.
@@ -41,7 +41,7 @@ class DeleteOldTrashcanFilesCommand extends Command
     public function handle()
     {
         $days = Carbon::now()->subDays(config('trash.expires_in_days'));
-        $files = File::where('deleted_at', '>', $days)
+        $files = File::where('deleted_at', '<', $days)
                      ->where('mime_type', '<>', 'directory')
                      ->limit(1000)
                      ->cursor();

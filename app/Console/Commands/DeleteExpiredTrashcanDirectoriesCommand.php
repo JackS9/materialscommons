@@ -8,7 +8,7 @@ use App\Models\TbdFile;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
-class DeleteOldTrashcanDirectoriesCommand extends Command
+class DeleteExpiredTrashcanDirectoriesCommand extends Command
 {
     use ChildDirs;
 
@@ -17,7 +17,7 @@ class DeleteOldTrashcanDirectoriesCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'mc:delete-old-trashcan-directories';
+    protected $signature = 'mc:delete-expired-trashcan-directories';
 
     /**
      * The console command description.
@@ -44,9 +44,12 @@ class DeleteOldTrashcanDirectoriesCommand extends Command
     public function handle()
     {
         $days = Carbon::now()->subDays(config('trash.expires_in_days'));
-        $rootDir = File::where('deleted_at', '>', $days)
+        $rootDir = File::where('deleted_at', '<', $days)
                        ->where('mime_type', 'directory')
                        ->first();
+        if (is_null($rootDir)) {
+            return 0;
+        }
         $dirs = $this->recursivelyRetrieveAllSubdirs($rootDir->id);
         foreach ($dirs as $dir) {
             $this->deleteFilesAndDir($dir);

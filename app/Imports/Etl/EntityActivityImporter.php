@@ -5,6 +5,7 @@ namespace App\Imports\Etl;
 use App\Actions\Activities\CreateActivityAction;
 use App\Actions\Entities\CreateEntityAction;
 use App\Actions\Etl\GetFileByPathAction;
+use App\Enums\ExperimentStatus;
 use App\Models\Activity;
 use App\Models\Attribute;
 use App\Models\AttributeValue;
@@ -12,6 +13,7 @@ use App\Models\Entity;
 use App\Models\EntityState;
 use App\Models\Experiment;
 use App\Models\File;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
@@ -23,25 +25,38 @@ class EntityActivityImporter
 {
     const GLOBAL_WORKSHEET_NAME = 'mc constants';
 
-    private $projectId;
-    private $experimentId;
+    private int $projectId;
+    private ?int $experimentId;
 
-    /** @var \App\Models\Experiment */
-    private $experiment;
-    private $userId;
+    private ?Experiment $experiment;
+    private int $userId;
 
-    private $sawHeader = false;
-    private $headerTracker;
-    private $worksheet;
-    private $entityTracker;
-    private $activityTracker;
-    private $rowNumber;
-    private $rows;
-    private $currentSheetRows;
-    private $getFileByPathAction;
-    private $globalSettings;
-    private $currentSheetPosition;
-    private $etlState;
+    private bool $sawHeader = false;
+    private ?HeaderTracker $headerTracker;
+    private ?Worksheet $worksheet;
+    private EntityTracker $entityTracker;
+    private HashedActivityTracker $activityTracker;
+    private int $rowNumber;
+    private Collection $rows;
+    private Collection $currentSheetRows;
+    private GetFileByPathAction $getFileByPathAction;
+    private GlobalSettingsLoader $globalSettings;
+    private int $currentSheetPosition;
+    private EtlState $etlState;
+    private Carbon $now;
+
+    private static array $ignoreWorksheetKeys = [
+        "i"       => true,
+        "ignore"  => true,
+        "doc"     => true,
+        "example" => true,
+    ];
+
+    private static array $experimentWorksheetKeys = [
+        "e"          => true,
+        "exp"        => true,
+        "experiment" => true,
+    ];
 
     public function __construct($projectId, $experimentId, $userId, EtlState $etlState)
     {
@@ -52,17 +67,21 @@ class EntityActivityImporter
         $this->rows = collect();
         $this->currentSheetRows = collect();
         $this->currentSheetPosition = 1;
+        $this->experiment = null;
 
         $this->entityTracker = new EntityTracker();
         $this->activityTracker = new HashedActivityTracker();
         $this->getFileByPathAction = new GetFileByPathAction();
         $this->globalSettings = new GlobalSettingsLoader();
         $this->etlState = $etlState;
+        $this->now = Carbon::now();
     }
 
     public function execute($spreadsheetPath)
     {
-        $this->experiment = Experiment::findOrFail($this->experimentId);
+        if (!is_null($this->experimentId)) {
+            $this->experiment = Experiment::findOrFail($this->experimentId);
+        }
         $spreadsheet = $this->loadSpreadsheet($spreadsheetPath);
         $this->loadGlobalSettingsIfExists($spreadsheet);
         $this->processWorksheets($spreadsheet);
@@ -99,10 +118,128 @@ class EntityActivityImporter
                 // settings to apply with processing steps.
                 continue;
             }
+
+            if ($this->ignoreWorksheet($worksheet)) {
+                continue;
+            }
+
+            if ($this->isExperimentWorksheet($worksheet)) {
+                $this->switchToNewExperiment($worksheet);
+            }
+
             $this->processWorksheet($worksheet);
             $this->etlState->etlRun->n_sheets_processed++;
             $this->currentSheetPosition++;
         }
+    }
+
+    private function ignoreWorksheet(Worksheet $worksheet): bool
+    {
+        return $this->worksheetContainsKeyFrom($worksheet, self::$ignoreWorksheetKeys);
+    }
+
+    private function isExperimentWorksheet(Worksheet $worksheet): bool
+    {
+        return $this->worksheetContainsKeyFrom($worksheet, self::$experimentWorksheetKeys);
+    }
+
+    private function worksheetContainsKeyFrom(Worksheet $worksheet, $keys): bool
+    {
+        $worksheetTitleLower = Str::lower($worksheet->getTitle());
+        $dash = strpos($worksheetTitleLower, '-');
+
+        // If there was a dash then the user might have set the sheet to be ignored. Check if the word
+        // before the dash is one of the keywords we use that tells us to ignore the sheet.
+        if ($dash !== false) {
+            $prefix = substr($worksheetTitleLower, 0, $dash);
+            if (array_key_exists($prefix, $keys)) {
+                return true;
+            }
+        }
+
+        // Second way of handling this if the first failed - with parenthesis. For example if a user
+        // were to give a worksheet the name "(Example) How to use", then it would be recognized
+        // as an example worksheet and ignored.
+        $leftParen = strpos($worksheetTitleLower, '(');
+        $rightParen = strpos($worksheetTitleLower, ')');
+        if ($leftParen !== false && $rightParen !== false) {
+            $prefix = substr($worksheetTitleLower, $leftParen + 1, $rightParen - 1);
+            return array_key_exists($prefix, $keys);
+        }
+
+        return false;
+    }
+
+    private function worksheetContainsKeyUsingDashFrom(Worksheet $worksheet, $keys): bool
+    {
+        $worksheetTitleLower = Str::lower($worksheet->getTitle());
+        $dash = strpos($worksheetTitleLower, '-');
+
+        // If there was a dash then the user might have set the sheet to be ignored. Check if the word
+        // before the dash is one of the keywords we use that tells us to ignore the sheet.
+        if ($dash !== false) {
+            $prefix = substr($worksheetTitleLower, 0, $dash);
+            return array_key_exists($prefix, $keys);
+        }
+
+        return false;
+    }
+
+    private function worksheetContainsKeyUsingParensFrom(Worksheet $worksheet, $keys): bool
+    {
+        $worksheetTitleLower = Str::lower($worksheet->getTitle());
+        // Second way of handling this if the first failed - with parenthesis. For example if a user
+        // were to give a worksheet the name "(Example) How to use", then it would be recognized
+        // as an example worksheet and ignored.
+        $leftParen = strpos($worksheetTitleLower, '(');
+        $rightParen = strpos($worksheetTitleLower, ')');
+        if ($leftParen !== false && $rightParen !== false) {
+            $prefix = substr($worksheetTitleLower, $leftParen + 1, $rightParen - 1);
+            return array_key_exists($prefix, $keys);
+        }
+
+        return false;
+    }
+
+    private function switchToNewExperiment(Worksheet $worksheet)
+    {
+        if (!is_null($this->experiment)) {
+            // There was a previous experiment so connect all the relationships
+            // before we start cleaning up state.
+            $this->createActivityRelationships();
+        }
+        $this->experiment = $this->createExperiment($worksheet);
+        $this->experimentId = $this->experiment->id;
+
+        // Reset loader state
+        $this->currentSheetPosition = 1;
+        $this->rows = collect();
+        $this->entityTracker = new EntityTracker();
+        $this->activityTracker = new HashedActivityTracker();
+    }
+
+    private function createExperiment(Worksheet $worksheet): ?Experiment
+    {
+        $name = $this->getAnnotatedWorksheetName($worksheet);
+        return Experiment::create([
+            'name'       => $name,
+            'project_id' => $this->projectId,
+            'owner_id'   => $this->userId,
+            'status'     => ExperimentStatus::InProgress,
+        ]);
+    }
+
+    private function getAnnotatedWorksheetName(Worksheet $worksheet): string
+    {
+        $title = $worksheet->getTitle();
+        if ($this->worksheetContainsKeyUsingDashFrom($worksheet, self::$experimentWorksheetKeys)) {
+            $dash = strpos($title, '-');
+            return Str::of(substr($title, $dash + 1))->trim()->__toString();
+        }
+
+        // Must have parens
+        $parenRight = strpos($title, ')');
+        return Str::of(substr($title, $parenRight + 1))->trim()->__toString();
     }
 
     private function processWorksheet(Worksheet $worksheet)
@@ -218,14 +355,27 @@ class EntityActivityImporter
         /** @var EntityState $state */
         $state = $entity->entityStates()->first();
         $this->addAttributesToEntity($row->entityAttributes, $entity, $state, $row);
+        $this->addTagsToEntity($entity, $row->entityTags);
         // Add a new activity
         $activity = $this->addNewActivity($entity, $state, $row);
         $this->activityTracker->addActivity($row->activityAttributesHash, $activity);
         $this->addFilesToActivityAndEntity($row->fileAttributes, $entity, $activity);
     }
 
+    private function addTagsToEntity(Entity $entity, Collection $entityTags)
+    {
+        $tags = [];
+        $entityTags->each(function(ColumnAttribute $ca) use (&$tags) {
+            foreach($ca->tags as $tag) {
+                $tags[] = $tag;
+            }
+        });
+
+        $entity->attachTags($tags);
+    }
+
     private function addAttributesToEntity(Collection $entityAttributes, Entity $entity, EntityState $state,
-        RowTracker $rowTracker)
+                                           RowTracker $rowTracker)
     {
         $seenAttributes = collect();
         $attributePosition = 1;
@@ -238,11 +388,13 @@ class EntityActivityImporter
                     'val'          => ['value' => $attr->value],
                 ]);
             } else {
+                $importantDate = $attr->important ? $this->now : null;
                 $a = Attribute::create([
-                    'name'              => $attr->name,
-                    'attributable_id'   => $state->id,
-                    'eindex'            => $attributePosition,
-                    'attributable_type' => EntityState::class,
+                    'name'                => $attr->name,
+                    'attributable_id'     => $state->id,
+                    'eindex'              => $attributePosition,
+                    'attributable_type'   => EntityState::class,
+                    'marked_important_at' => $importantDate,
                 ]);
                 AttributeValue::create([
                     'attribute_id' => $a->id,
@@ -280,31 +432,58 @@ class EntityActivityImporter
             // Multiple files can be specified in a cell when they are separated by a semi-colon (;), eg
             // file1.txt;file2.txt
             foreach (explode(";", $attr->value) as $value) {
-                $value = trim($value);
-
-                if ($value == "") {
-                    continue;
-                }
-
-                $path = "{$header->name}/{$value}";
-                if (strpos($value, "/") !== false) {
-                    // Cell contains the path, no need to use the header
-                    $path = $value;
-                }
-
-                if ($this->isWildCard($path)) {
-                    $this->addWildCardFiles($path, $entity, $activity);
-                    continue;
-                }
-
-                if (($dir = $this->isDirectory($path)) !== null) {
-                    $this->addDirectoryFiles($dir, $entity, $activity);
-                    continue;
-                }
-
-                $this->addSingleFile($path, $entity, $activity);
+                $path = $this->entryToPath($header->name, $value);
+                $this->processAndAddFiles($path, $entity, $activity);
             }
         });
+
+        $globalAttributes = $this->globalSettings->getGlobalSettingsForWorksheet($activity->name);
+        foreach ($globalAttributes as $globalAttribute) {
+            if ($globalAttribute->attributeHeader->attrType !== "file") {
+                continue;
+            }
+
+            foreach (explode(";", $globalAttribute->value) as $value) {
+                $path = $this->entryToPath($globalAttribute->attributeHeader->name, $value);
+                $this->processAndAddFiles($path, $entity, $activity);
+            }
+        }
+    }
+
+    private function entryToPath($headerName, $value)
+    {
+        $value = trim($value);
+
+        if ($value == "") {
+            return null;
+        }
+
+        $path = "{$headerName}/{$value}";
+        if (strpos($value, "/") !== false) {
+            // Cell contains the path, no need to use the header
+            $path = $value;
+        }
+
+        return $path;
+    }
+
+    private function processAndAddFiles($path, $entity, $activity)
+    {
+        if (is_null($path)) {
+            return;
+        }
+
+        if ($this->isWildCard($path)) {
+            $this->addWildCardFiles($path, $entity, $activity);
+            return;
+        }
+
+        if (($dir = $this->isDirectory($path)) !== null) {
+            $this->addDirectoryFiles($dir, $entity, $activity);
+            return;
+        }
+
+        $this->addSingleFile($path, $entity, $activity);
     }
 
     private function isWildCard($path)
@@ -318,6 +497,7 @@ class EntityActivityImporter
         $expression = basename($path);
         $dir = File::where('path', $dirPath)
                    ->where('current', true)
+                   ->whereNull('deleted_at')
                    ->where('project_id', $this->projectId)
                    ->first();
 
@@ -328,6 +508,7 @@ class EntityActivityImporter
 
         File::where('directory_id', $dir->id)
             ->where('mime_type', '<>', 'directory')
+            ->whereNull('deleted_at')
             ->where('current', true)
             ->chunk(100, function ($files) use ($entity, $activity, $expression) {
                 $files->each(function (File $file) use ($entity, $activity, $expression) {
@@ -350,6 +531,7 @@ class EntityActivityImporter
     {
         File::where('directory_id', $dir->id)
             ->where('mime_type', '<>', 'directory')
+            ->whereNull('deleted_at')
             ->where('current', true)
             ->chunk(100, function ($files) use ($entity, $activity, $dir) {
                 $files->each(function (File $file) use ($entity, $activity, $dir) {
@@ -431,6 +613,7 @@ class EntityActivityImporter
             'current'   => true,
         ]);
         $this->addAttributesToEntity($row->entityAttributes, $entity, $state, $row);
+        $this->addTagsToEntity($entity, $row->entityTags);
         $activity = $this->addNewActivity($entity, $state, $row);
         $this->activityTracker->addActivity($row->activityAttributesHash, $activity);
         $this->addFilesToActivityAndEntity($row->fileAttributes, $entity, $activity);
@@ -442,10 +625,11 @@ class EntityActivityImporter
         $attributePosition = 1;
         $attributes = $rowTracker->activityAttributes->map(function (ColumnAttribute $attr) use (&$attributePosition) {
             return [
-                'name'   => $attr->name,
-                'value'  => $attr->value,
-                'unit'   => $attr->unit,
-                'eindex' => $attributePosition++,
+                'name'                => $attr->name,
+                'value'               => $attr->value,
+                'unit'                => $attr->unit,
+                'eindex'              => $attributePosition++,
+                'marked_important_at' => $attr->important ? $this->now : null,
             ];
         })->toArray();
 
@@ -473,9 +657,22 @@ class EntityActivityImporter
         $this->etlState->logProgress("   Adding process: {$activity->name} for sample {$entity->name}");
         $activity->entities()->attach($entity);
         $activity->entityStates()->attach([$entityState->id => ['direction' => 'out']]);
+        $this->addTagsToActivity($activity, $rowTracker->activityTags);
         $this->etlState->etlRun->n_activities++;
 
         return $activity;
+    }
+
+    private function addTagsToActivity(Activity $activity, Collection $activityTags)
+    {
+        $tags = [];
+        $activityTags->each(function(ColumnAttribute $ca) use (&$tags) {
+            foreach($ca->tags as $tag) {
+                $tags[] = $tag;
+            }
+        });
+
+        $activity->attachTags($tags);
     }
 
     private function createActivityRelationships()

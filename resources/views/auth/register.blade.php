@@ -74,6 +74,10 @@
                                 </div>
                             </div>
 
+                            @if(config('app.recaptcha_enabled'))
+                                {!! RecaptchaV3::field('register') !!}
+                            @endif
+
                             <div class="form-group row mb-0">
                                 <div class="col-md-6 offset-md-4">
                                     <button type="submit" class="btn btn-primary">

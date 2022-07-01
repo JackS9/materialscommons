@@ -4,6 +4,12 @@ return [
 
     'beta' => env('APP_BETA', 0),
 
+    'email_verification' => env('APP_EMAIL_VERIFICATION', true),
+
+    'recaptcha_enabled' => env('APP_RECAPTCHA_ENABLED', true),
+
+    'survey_url' => env("MC_SURVEY_URL"),
+
     /*
     |--------------------------------------------------------------------------
     | Application Name
@@ -201,7 +207,7 @@ return [
 
     'aliases' => [
 
-        'App'       => Illuminate\Support\Facades\App::class,
+        'App'          => Illuminate\Support\Facades\App::class,
         'Artisan'      => Illuminate\Support\Facades\Artisan::class,
         'Auth'         => Illuminate\Support\Facades\Auth::class,
         'Blade'        => Illuminate\Support\Facades\Blade::class,
@@ -234,7 +240,6 @@ return [
         'URL'          => Illuminate\Support\Facades\URL::class,
         'Validator'    => Illuminate\Support\Facades\Validator::class,
         'View'         => Illuminate\Support\Facades\View::class,
-        'Sanitizer'    => Waavi\Sanitizer\Laravel\Facade::class,
         'Batch'        => Mavinoo\Batch\BatchFacade::class,
     ],
 

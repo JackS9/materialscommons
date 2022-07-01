@@ -4,11 +4,19 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Traits\HasUniqueSlug;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use function redirect;
+use function route;
+use function slugify;
 
 class RegisterController extends Controller
 {
@@ -24,6 +32,7 @@ class RegisterController extends Controller
     */
 
     use RegistersUsers;
+    use HasUniqueSlug;
 
     /**
      * Create a new controller instance.
@@ -35,6 +44,31 @@ class RegisterController extends Controller
         $this->middleware('guest');
     }
 
+    public function register(Request $request)
+    {
+        $this->validator($request->all())->validate();
+
+        event(new Registered($user = $this->create($request->all())));
+
+        $this->addUniqueSlugToUser($user);
+
+//        $this->guard()->login($user);
+
+        if ($response = $this->registered($request, $user)) {
+            return $response;
+        }
+
+        if ($request->wantsJson()) {
+            return new JsonResponse([], 201);
+        }
+
+        if (config('app.email_verification')) {
+            return redirect(route('verification.notice', [$user]));
+        }
+
+        return redirect(route('login'));
+    }
+
     /**
      * Get a validator for an incoming registration request.
      *
@@ -43,9 +77,18 @@ class RegisterController extends Controller
      */
     protected function validator(array $data)
     {
+        if (config('app.recaptcha_enabled')) {
+            return Validator::make($data, [
+                'name'                 => ['required', 'string', 'max:255'],
+                'email'                => ['required', 'string', 'email', 'max:255', 'unique:users'],
+                'password'             => ['required', 'string', 'min:6', 'confirmed'],
+                'g-recaptcha-response' => ['required', 'recaptchav3:register,0.5'],
+            ]);
+        }
+
         return Validator::make($data, [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
         ]);
     }
@@ -69,13 +112,50 @@ class RegisterController extends Controller
     public function redirectTo()
     {
         if (true) {
-            return route('verification.notice');
+            if (config('app.email_verification')) {
+                return route('verification.notice');
+            }
+
+            return route('login');
         }
+
         $routeName = Route::getCurrentRoute()->getName();
         if ($routeName == 'register-for-upload') {
             return route('public.publish.wizard.choose_create_or_select_project');
         }
 
         return route('projects.index');
+    }
+
+    /**
+     * Show the application registration form.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function showRegistrationForm()
+    {
+        return view('auth.register');
+    }
+
+    /**
+     * Get the guard to be used during registration.
+     *
+     * @return \Illuminate\Contracts\Auth\StatefulGuard
+     */
+    protected function guard()
+    {
+        return Auth::guard();
+    }
+
+    /**
+     * The user has been registered.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return mixed
+     */
+    protected function registered(Request $request, $user)
+    {
+        //
     }
 }

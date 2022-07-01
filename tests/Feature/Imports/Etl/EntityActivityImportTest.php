@@ -560,6 +560,44 @@ class EntityActivityImportTest extends TestCase
         $this->assertEquals(5, $attrValue->val["value"]);
     }
 
+    /** @test */
+    public function test_loading_spreadsheet_with_global_file_settings()
+    {
+        $this->withoutExceptionHandling();
+        $user = User::factory()->create();
+        $project = Project::factory()->create([
+            'owner_id' => $user->id,
+        ]);
+        $rootDir = File::factory()->create([
+            'project_id' => $project->id,
+            'name'       => '/',
+            'path'       => '/',
+            'mime_type'  => 'directory',
+            'owner_id'   => $user->id,
+        ]);
+        $f1 = File::factory()->create([
+            'project_id'   => $project->id,
+            'name'         => 'f1.txt',
+            'mime_type'    => 'text',
+            'directory_id' => $rootDir->id,
+            'owner_id'     => $user->id,
+        ]);
+        $experiment = Experiment::factory()->create([
+            'owner_id'   => $user->id,
+            'project_id' => $project->id,
+        ]);
+
+        $importer = new EntityActivityImporter($project->id, $experiment->id, $user->id, new EtlState($user->id));
+        $importer->execute(Storage::disk('test_data')->path("etl/d1_with_global_settings_including_files.xlsx"));
+
+        $activity = Activity::where('name', 'sem')->first();
+        $this->assertEquals(1, $activity->files()->count());
+
+        $entity = Entity::where('name', 'DOUBLES1')->first();
+        $this->assertEquals(1, $entity->files()->count());
+    }
+
+    /** @test */
     public function test_loading_spreadsheet_with_boolean_values()
     {
         $this->withoutExceptionHandling();
@@ -580,6 +618,176 @@ class EntityActivityImportTest extends TestCase
                     $this->assertEquals("FALSE", $attribute->values[0]->val["value"]);
                     break;
             }
+        });
+    }
+
+    /** @test */
+    public function test_create_single_experiment_from_spreadsheet()
+    {
+        $this->withoutExceptionHandling();
+        $project = ProjectFactory::create();
+        $importer = new EntityActivityImporter($project->id, null, $project->owner_id,
+            new EtlState($project->owner_id));
+        $importer->execute(Storage::disk('test_data')->path('etl/create-one-experiment.xlsx'));
+        $this->assertEquals(1, Experiment::all()->count());
+        $experiment = Experiment::first();
+        $this->assertEquals("sem", $experiment->name);
+        $this->assertEquals(4, Attribute::where('attributable_type', EntityState::class)->count());
+        $this->assertEquals(2, Attribute::where('attributable_type', Activity::class)->count());
+    }
+
+    /** @test */
+    public function test_create_multiple_experiments_from_spreadsheet()
+    {
+        $this->withoutExceptionHandling();
+        $project = ProjectFactory::create();
+        $importer = new EntityActivityImporter($project->id, null, $project->owner_id,
+            new EtlState($project->owner_id));
+        $importer->execute(Storage::disk('test_data')->path('etl/create-two-experiments.xlsx'));
+        $this->assertEquals(2, Experiment::all()->count());
+
+        $experimentSem = Experiment::findOrFail(1);
+        $this->assertEquals("sem", $experimentSem->name);
+
+        $experimentSem2 = Experiment::findOrFail(2);
+        $this->assertEquals("sem2", $experimentSem2->name);
+
+        $this->assertEquals(8, Attribute::where('attributable_type', EntityState::class)->count());
+        $this->assertEquals(4, Attribute::where('attributable_type', Activity::class)->count());
+    }
+
+    /** @test */
+    public function test_create_single_experiment_with_workflow_step()
+    {
+        $this->withoutExceptionHandling();
+        $project = ProjectFactory::create();
+        $importer = new EntityActivityImporter($project->id, null, $project->owner_id,
+            new EtlState($project->owner_id));
+        $importer->execute(Storage::disk('test_data')->path('etl/create-one-experiment-with-workflow.xlsx'));
+        $this->assertEquals(1, Experiment::all()->count());
+        $experiment = Experiment::first();
+        $this->assertEquals("sem", $experiment->name);
+        $this->assertEquals(2, Activity::all()->count());
+        $this->assertEquals(9, Attribute::where('attributable_type', EntityState::class)->count());
+        $this->assertEquals(5, Attribute::where('attributable_type', Activity::class)->count());
+    }
+
+    /** @test */
+    public function test_create_multiple_experiments_with_workflow_steps()
+    {
+        $this->withoutExceptionHandling();
+        $project = ProjectFactory::create();
+        $importer = new EntityActivityImporter($project->id, null, $project->owner_id,
+            new EtlState($project->owner_id));
+        $importer->execute(Storage::disk('test_data')->path('etl/create-experiments-with-workflows.xlsx'));
+        $this->assertEquals(2, Experiment::all()->count());
+        $e1 = Experiment::with(['entities.attributes', 'activities.attributes'])->where('name', 'e1')->first();
+        $this->assertEquals(1, $e1->entities->count());
+        $this->assertEquals(2, $e1->entities[0]->entityStates->count());
+        $this->assertEquals(2, $e1->activities->count());
+        $this->assertEquals(2, $e1->activities[0]->attributes->count());
+        $this->assertEquals(3, $e1->activities[1]->attributes->count());
+
+        $e2 = Experiment::with(['entities.attributes', 'activities.attributes'])->where('name', 'e2')->first();
+        $this->assertEquals(1, $e2->entities->count());
+        $this->assertEquals(2, $e2->entities[0]->entityStates->count());
+        $this->assertEquals(2, $e2->activities->count());
+        $this->assertEquals(1, $e2->activities[0]->attributes->count());
+        $this->assertEquals(1, $e2->activities[1]->attributes->count());
+    }
+
+    /** @test */
+    public function test_import_attributes_marked_important()
+    {
+        $this->withoutExceptionHandling();
+        $user = User::factory()->create();
+        $project = Project::factory()->create([
+            'owner_id' => $user->id,
+        ]);
+        $experiment = Experiment::factory()->create([
+            'owner_id'   => $user->id,
+            'project_id' => $project->id,
+        ]);
+
+        $importer = new EntityActivityImporter($project->id, $experiment->id, $user->id, new EtlState($user->id));
+        $importer->execute(Storage::disk('test_data')->path("etl/d1_with_important.xlsx"));
+
+        // Check entities and entity attributes
+        $this->assertDatabaseHas('entities', ['project_id' => $project->id, 'name' => 'DOUBLES1']);
+        $this->assertEquals(2, Attribute::where('attributable_type', EntityState::class)->count());
+        $this->assertDatabaseHas('attributes', ['name' => 'wire composition']);
+
+        $sampleAttrMarkedImportant = Attribute::where('name', 'wire composition')->first();
+        $this->assertNotNull($sampleAttrMarkedImportant->marked_important_at);
+
+        $sampleAttrNotImportant = Attribute::where('name', 'wire diameter')->first();
+        $this->assertNull($sampleAttrNotImportant->marked_important_at);
+
+        // Check activity and activity attributes
+        $this->assertDatabaseHas('activities', ['name' => 'sem']);
+        $this->assertEquals(1, Activity::count());
+
+        $this->assertEquals(2, Attribute::where('attributable_type', Activity::class)->count());
+        $this->assertDatabaseHas('attributes',
+            ['name' => 'temperature', 'attributable_type' => Activity::class]);
+
+        $processAttrMarkedImportant = Attribute::where('name', 'temperature')->first();
+        $this->assertNotNull($processAttrMarkedImportant->marked_important_at);
+
+        $processAttrNotImportant = Attribute::where('name', 'stress relief time')->first();
+        $this->assertNull($processAttrNotImportant->marked_important_at);
+    }
+
+    /** @test */
+    public function test_process_and_sample_tags()
+    {
+        $this->withoutExceptionHandling();
+        $user = User::factory()->create();
+        $project = Project::factory()->create([
+            'owner_id' => $user->id,
+        ]);
+        $experiment = Experiment::factory()->create([
+            'owner_id'   => $user->id,
+            'project_id' => $project->id,
+        ]);
+
+        $importer = new EntityActivityImporter($project->id, $experiment->id, $user->id, new EtlState($user->id));
+        $importer->execute(Storage::disk('test_data')->path("etl/d1_with_tags.xlsx"));
+
+        // Check entities and entity attributes
+        $this->assertDatabaseHas('entities', ['project_id' => $project->id, 'name' => 'DOUBLES1']);
+        $this->assertEquals(1, Attribute::where('attributable_type', EntityState::class)->count());
+        $this->assertDatabaseHas('attributes', ['name' => 'wire composition']);
+
+        // Check Activities and activity attributes
+        $this->assertDatabaseHas('activities', ['project_id' => $project->id, 'name' => 'sem']);
+        $this->assertEquals(2, Attribute::where('attributable_type', Activity::class)->count());
+        $this->assertDatabaseHas('attributes', ['name' => 'Temperature']);
+        $this->assertDatabaseHas('attributes', ['name' => 'stress relief time']);
+
+        $entity = Entity::with(['tags'])->where('name', 'DOUBLES1')->first();
+        $this->assertEquals(3, $entity->tags->count());
+        $this->hasTags($entity->tags, ["alloy", "al", "zn"]);
+
+        $activity = Activity::with(['tags'])->where('name', 'sem')->first();
+        $this->assertEquals(2, $activity->tags->count());
+        $this->hasTags($entity->tags, ["heat treatment", "long"]);
+    }
+
+    private function hasTags($tags, $tagsItShouldHave)
+    {
+        foreach ($tagsItShouldHave as $tagItShouldHave) {
+            if (!$this->hasTag($tags, $tagItShouldHave)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function hasTag($tags, $tagName)
+    {
+        return $tags->contains(function ($tag) use ($tagName) {
+            return $tag->name == $tagName;
         });
     }
 }

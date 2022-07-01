@@ -33,6 +33,8 @@ class RowTracker
         $this->entityAttributes = collect();
         $this->fileAttributes = collect();
         $this->activityAttributesHash = "";
+        $this->entityTags = collect();
+        $this->activityTags = collect();
     }
 
     public function loadRow(Row $row, HeaderTracker $headerTracker)
@@ -66,13 +68,22 @@ class RowTracker
                     continue;
                 }
 
-                $colAttr = new ColumnAttribute($header->name, $value, $header->unit, $header->attrType, $index);
+                $colAttr = new ColumnAttribute($header->name, $value, $header->unit, $header->attrType, $index,
+                    $header->important);
                 switch ($header->attrType) {
                     case "entity":
                         $this->entityAttributes->push($colAttr);
                         break;
+                    case "tags-entity":
+                        $colAttr->addTags($value);
+                        $this->entityTags->push($colAttr);
+                        break;
                     case "activity":
                         $this->activityAttributes->push($colAttr);
+                        break;
+                    case "tags-activity":
+                        $colAttr->addTags($value);
+                        $this->activityTags->push($colAttr);
                         break;
                     case "file":
                         $this->fileAttributes->push($colAttr);

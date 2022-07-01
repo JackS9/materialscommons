@@ -16,6 +16,8 @@ class IndexDirectoryByPathApiController extends Controller
         $dir = File::where('project_id', $projectId)
                    ->where('path', $path)
                    ->where('mime_type', 'directory')
+                   ->whereNull('deleted_at')
+                   ->whereNull('dataset_id')
                    ->where('current', true)
                    ->first();
         abort_if(is_null($dir), 404, "No such directory path");

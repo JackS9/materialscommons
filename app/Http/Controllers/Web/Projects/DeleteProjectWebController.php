@@ -8,13 +8,6 @@ use App\Models\Project;
 
 class DeleteProjectWebController extends Controller
 {
-    /**
-     * @param  \App\Actions\Projects\DeleteProjectAction  $deleteProjectAction
-     * @param  \App\Models\Project  $project
-     *
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
-     * @throws \Exception
-     */
     public function __invoke(DeleteProjectAction $deleteProjectAction, Project $project)
     {
         if (!$this->checkIfCanDelete($project)) {
@@ -38,10 +31,10 @@ class DeleteProjectWebController extends Controller
             return false;
         }
 
-        if ($project->file_count > 0) {
-            flash("You cannot delete a project that has files")->error();
-            return false;
-        }
+//        if ($project->file_count > 0) {
+//            flash("You cannot delete a project that has files")->error();
+//            return false;
+//        }
 
         return true;
     }
