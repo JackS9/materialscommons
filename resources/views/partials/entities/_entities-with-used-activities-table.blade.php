@@ -1,4 +1,4 @@
-@if(isInBeta() && Request::routeIs('projects.entities.*'))
+@if(Request::routeIs('projects.entities.*'))
     <div id="mql-query-builder" x-data="initMQLBuilder()">
         <div id="open-query-builder" x-show="!showBuilder">
             <a href="#" @click="toggleShowBuilder()">Open Query Builder</a>
@@ -59,12 +59,13 @@
     <script>
         $(document).ready(() => {
             $('#entities-with-used-activities').DataTable({
+                pageLength: 100,
                 scrollX: true,
                 stateSave: true,
             });
         });
         htmx.on('htmx:after-settle', (evt) => {
-            if (evt.target.id == "mql-query") {
+            if (evt.target.id === "mql-query") {
                 mcutil.autosizeTextareas();
             }
         });
@@ -80,7 +81,6 @@
                     }
                 },
                 toggleShowSavedQueries() {
-                    console.log('toggleShowSavedQueries');
                     this.showSavedQueries = !this.showSavedQueries;
                 }
             };

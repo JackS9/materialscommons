@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Spatie\Searchable\Searchable;
 use Spatie\Searchable\SearchResult;
 
@@ -88,6 +89,8 @@ class File extends Model implements Searchable
         return $this->hasMany(File::class, 'directory_id', 'directory_id')
                     ->where('name', $this->name)
                     ->where('id', '<>', $this->id)
+                    ->whereNull('dataset_id')
+                    ->whereNull('deleted_at')
                     ->orderBy('created_at');
     }
 
@@ -95,6 +98,8 @@ class File extends Model implements Searchable
     {
         return File::where('directory_id', $this->directory_id)
                    ->where('name', $this->name)
+                   ->whereNull('dataset_id')
+                   ->whereNull('deleted_at')
                    ->where('current', true)
                    ->first();
     }
@@ -278,6 +283,10 @@ class File extends Model implements Searchable
             $fileName = $fileName.".pdf";
         }
 
+        if ($this->isJupyterNotebook()) {
+            $fileName = $fileName.".html";
+        }
+
         return $this->pathDirPartial()."/.conversion/{$fileName}";
     }
 
@@ -287,7 +296,11 @@ class File extends Model implements Searchable
             return true;
         }
 
-        return $this->isConvertibleOfficeDocument();
+        if ($this->isConvertibleOfficeDocument()) {
+            return true;
+        }
+
+        return $this->isJupyterNotebook();
     }
 
     public function isImage()
@@ -330,6 +343,15 @@ class File extends Model implements Searchable
         }
     }
 
+    public function isJupyterNotebook()
+    {
+        if ($this->mime_type !== 'directory' && Str::endsWith($this->name, ".ipynb")) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function getDirPathForFormatting(): string
     {
         if (is_null($this->path)) {
@@ -364,6 +386,8 @@ class File extends Model implements Searchable
             // First mark all files matching name in the directory as not active
             File::where('directory_id', $file->directory_id)
                 ->where('name', $file->name)
+                ->whereNull('dataset_id')
+                ->whereNull('deleted_at')
                 ->update(['current' => false]);
 
             // Then mark the file passed in as active
@@ -385,6 +409,8 @@ class File extends Model implements Searchable
     {
         return File::where('project_id', $projectId)
                    ->where('path', $path)
+                   ->whereNull('dataset_id')
+                   ->whereNull('deleted_at')
                    ->where('current', true)
                    ->get();
     }

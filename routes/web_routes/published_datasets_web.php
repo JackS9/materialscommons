@@ -15,6 +15,11 @@ use App\Http\Controllers\Web\Published\Datasets\DownloadDatasetGlobusRedirectWeb
 use App\Http\Controllers\Web\Published\Datasets\DownloadDatasetZipfileWebController;
 use App\Http\Controllers\Web\Published\Datasets\Entities\ShowPublishedDatasetEntitySpreadWebController;
 use App\Http\Controllers\Web\Published\Datasets\Entities\ShowPublishedDatasetEntityWebController;
+use App\Http\Controllers\Web\Published\Datasets\Login\CreateAccountForPublishedDatasetGlobusDownloadWebController;
+use App\Http\Controllers\Web\Published\Datasets\Login\CreateAccountForPublishedDatasetZipfileDownloadWebController;
+use App\Http\Controllers\Web\Published\Datasets\Login\LoginForPublishedDatasetGlobusDownloadWebController;
+use App\Http\Controllers\Web\Published\Datasets\Login\LoginForPublishedDatasetZipfileDownloadWebController;
+use App\Http\Controllers\Web\Published\Datasets\MarkDatasetForNotificationsWebController;
 use App\Http\Controllers\Web\Published\Datasets\Folders\GotoPublishedDatasetFolderByPathWebController;
 use App\Http\Controllers\Web\Published\Datasets\Folders\ShowPublishedDatasetFolderWebController;
 use App\Http\Controllers\Web\Published\Datasets\ShowImportPublishedDatasetIntoProjectWebController;
@@ -26,6 +31,7 @@ use App\Http\Controllers\Web\Published\Datasets\ShowPublishedDatasetFilesWebCont
 use App\Http\Controllers\Web\Published\Datasets\ShowPublishedDatasetOverviewWebController;
 use App\Http\Controllers\Web\Published\Datasets\ShowPublishedDatasetWebController;
 use App\Http\Controllers\Web\Published\Datasets\ShowPublishedDatasetWorkflowsWebController;
+use App\Http\Controllers\Web\Published\Datasets\UnmarkDatasetForNotificationsWebController;
 use App\Http\Controllers\Web\Published\Files\DisplayPublishedFileWebController;
 use App\Http\Controllers\Web\Published\Files\ShowPublishedFileWebController;
 use Illuminate\Support\Facades\Route;
@@ -42,11 +48,25 @@ Route::get('/datasets/{dataset}/workflows', ShowPublishedDatasetWorkflowsWebCont
 Route::get('/datasets/{dataset}/zipfile', DownloadDatasetZipfileWebController::class)
      ->name('public.datasets.download_zipfile');
 
+Route::get('/datasets/{dataset}/login/download/zipfile', LoginForPublishedDatasetZipfileDownloadWebController::class)
+     ->name('public.datasets.login.download.zipfile');
+
+Route::get('/datasets/{dataset}/create-account/download/zipfile',
+    CreateAccountForPublishedDatasetZipfileDownloadWebController::class)
+     ->name('public.datasets.create-account.download.zipfile');
+
 Route::get('/datasets/{dataset}/files/{file}/download', DownloadDatasetFileWebController::class)
      ->name('public.datasets.download_file');
 
 Route::get('/datasets/{dataset}/globus', DownloadDatasetGlobusRedirectWebController::class)
      ->name('public.datasets.download_globus');
+
+Route::get('/datasets/{dataset}/login/download/globus', LoginForPublishedDatasetGlobusDownloadWebController::class)
+     ->name('public.datasets.login.download.globus');
+
+Route::get('/datasets/{dataset}/create-account/download/globus',
+    CreateAccountForPublishedDatasetGlobusDownloadWebController::class)
+     ->name('public.datasets.create-account.download.globus');
 
 Route::get('/datasets/{dataset}/entities', ShowPublishedDatasetEntitiesWebController::class)
      ->name('public.datasets.entities.index');
@@ -115,6 +135,12 @@ Route::get('/datasets/{dataset}/comments/{comment}/delete', DeleteDatasetComment
 
 Route::delete('/datasets/{dataset}/comments/{comment}', DestroyDatasetCommentWebController::class)
      ->name('public.datasets.comments.destroy');
+
+// Notifications
+Route::get('/datasets/{dataset}/mark-for-notification', MarkDatasetForNotificationsWebController::class)
+     ->name('public.datasets.notifications.mark-for-notification');
+Route::get('/dataset/{dataset}/unmark-for-notification', UnmarkDatasetForNotificationsWebController::class)
+     ->name('public.datasets.notifications.unmark-for-notification');
 
 // Folders
 Route::get('/datasets/{dataset}/folders/by_path', GotoPublishedDatasetFolderByPathWebController::class)

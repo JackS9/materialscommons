@@ -2,8 +2,10 @@
 
 namespace App\Traits;
 
+use App\Models\File;
 use Illuminate\Support\Str;
 use function isInBeta;
+use const PATHINFO_EXTENSION;
 
 trait FileType
 {
@@ -61,12 +63,16 @@ trait FileType
     {
         $type = $this->fileTypeFromMime($file->mime_type);
 
-        if (isInBeta()) {
+        if (!is_null($file->dataset_id)) {
             if ($type == "text") {
                 if (Str::endsWith($file->name, ".idx")) {
                     return "open-visus";
                 }
             }
+        }
+
+        if (Str::endsWith($file->name, ".ipynb")) {
+            return "jupyter-notebook";
         }
 
         if (Str::startsWith($file->mime_type, "text/")) {
@@ -152,6 +158,26 @@ trait FileType
         }
 
         return "Unknown";
+    }
+
+    function mimeTypeToDescriptionForDisplay(File $file): string
+    {
+        if ($file->mime_type == "directory") {
+            return "Directory";
+        }
+
+        $type = $this->mimeTypeToDescription($file->mime_type);
+        if ($type != "Unknown") {
+            return $type;
+        }
+
+        // If the type is Unknown then show the extension for the file.
+        $ext = pathinfo($file->name, PATHINFO_EXTENSION);
+        if (blank($ext)) {
+            return "Unknown";
+        }
+
+        return $ext;
     }
 
     protected function inTable($type, $lookupTable)

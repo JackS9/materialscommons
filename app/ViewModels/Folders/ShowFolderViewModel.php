@@ -2,27 +2,25 @@
 
 namespace App\ViewModels\Folders;
 
+use App\Models\Dataset;
 use App\Models\File;
 use App\Models\Project;
 use Spatie\ViewModels\ViewModel;
 
 class ShowFolderViewModel extends ViewModel
 {
-    private $directory;
-    private $project;
-    private $dirPaths;
-    private $files;
-    private $dataset;
+    protected ?File $directory;
+    protected ?Project $project;
+    protected $files;
+    protected ?Dataset $dataset;
+    protected $projects;
 
-    public function __construct(File $directory, $files)
+    public function __construct(?File $directory, $files)
     {
         $this->directory = $directory;
-        $this->dirPaths = [];
         $this->files = $files;
         $this->project = null;
         $this->dataset = null;
-
-        $this->createDirectoryPaths();
     }
 
     public function withProject($project)
@@ -34,6 +32,12 @@ class ShowFolderViewModel extends ViewModel
     public function withDataset($dataset)
     {
         $this->dataset = $dataset;
+        return $this;
+    }
+
+    public function withProjects($projects): ShowFolderViewModel
+    {
+        $this->projects = $projects;
         return $this;
     }
 
@@ -57,26 +61,8 @@ class ShowFolderViewModel extends ViewModel
         return $this->dataset;
     }
 
-    public function dirPaths()
+    public function projects()
     {
-        return $this->dirPaths;
-    }
-
-    private function createDirectoryPaths()
-    {
-        if ($this->directory->path === "/") {
-            array_push($this->dirPaths, ['name' => '', 'path' => "/"]);
-        } else {
-            $pieces = explode('/', $this->directory->path);
-            $currentPath = "";
-            foreach ($pieces as $piece) {
-                if ($piece === "") {
-                    array_push($this->dirPaths, ['name' => '', 'path' => "/"]);
-                } else {
-                    $currentPath = "{$currentPath}/${piece}";
-                    array_push($this->dirPaths, ['name' => $piece, 'path' => $currentPath]);
-                }
-            }
-        }
+        return $this->projects;
     }
 }

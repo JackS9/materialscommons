@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('pageTitle', 'Files')
+@section('pageTitle', "{$project->name} - Files")
 
 @section('nav')
     @include('layouts.navs.app.project')
@@ -9,24 +9,15 @@
 @section('content')
     <x-card>
         <x-slot name="header">
-            @if (Request::routeIs('projects.folders.index'))
-                {{$directory->name}}
-            @else
-                @if(sizeof($dirPaths) == 1)
-                    {{$directory->name}}
-                @else
-                    @foreach($dirPaths as $dirpath)
-                        <a class="action-link"
-                           href="{{route('projects.folders.by_path', ['project' => $project, 'path' => $dirpath["path"]])}}">
-                            {{$dirpath['name']}}/
-                        </a>
-                    @endforeach
-                @endif
-            @endif
+            <x-show-dir-path :project="$project" :file="$directory"/>
+
             {{--            <a class="float-right action-link" href="#">--}}
             {{--                <i class="fas fa-trash mr-2"></i>Delete Files--}}
             {{--            </a>--}}
 
+            <a class="float-right action-link mr-4" data-toggle="modal" href="#copy-choose-project-dialog">
+                <i class="fas fa-copy mr-2"></i>Copy Files/Dirs
+            </a>
             <a class="float-right action-link mr-4"
                href="{{route('projects.folders.move', [$project, $directory])}}">
                 <i class="fas fa-angle-double-right mr-2"></i>Move Files
@@ -52,24 +43,29 @@
                 <i class="fas fa-fw fa-plus mr-2"></i>Add Files
             </a>
 
+            <a class="float-right action-link mr-4"
+               href="{{route('projects.folders.create', [$project, $directory])}}">
+                <i class="fas fa-fw fa-folder-plus mr-2"></i>Create Directory
+            </a>
+
+            @if($directory->name !== "/" && $files->count() === 0)
                 <a class="float-right action-link mr-4"
-                   href="{{route('projects.folders.create', [$project, $directory])}}">
-                    <i class="fas fa-fw fa-folder-plus mr-2"></i>Create Directory
+                   href="{{route('projects.folders.destroy', [$project, $directory])}}">
+                    <i class="fas fa-fw fa-trash mr-2"></i>Delete
                 </a>
+            @endif
 
-                @if(sizeof($dirPaths) !== 1 && $files->count() === 0)
-                    <a class="float-right action-link mr-4"
-                       href="{{route('projects.folders.destroy', [$project, $directory])}}">
-                        <i class="fas fa-fw fa-trash mr-2"></i>Delete
-                    </a>
-                @endif
+            @if($directory->name !== "/")
+                <a class="float-right action-link mr-4"
+                   href="{{route('projects.folders.rename', [$project, $directory])}}">
+                    <i class="fas fa-fw fa-edit mr-2"></i>Rename
+                </a>
+            @endif
 
-                @if(sizeof($dirPaths) !== 1)
-                    <a class="float-right action-link mr-4"
-                       href="{{route('projects.folders.rename', [$project, $directory])}}">
-                        <i class="fas fa-fw fa-edit mr-2"></i>Rename
-                    </a>
-                @endif
+            <a class="float-right action-link mr-4"
+               href="{{route('projects.folders.index-images', [$project, $directory])}}">
+                <i class="fas fa-fw fa-images mr-2"></i>View Images
+            </a>
         </x-slot>
 
         <x-slot name="body">
@@ -108,6 +104,7 @@
                     <th>Type</th>
                     <th>Size</th>
                     <th>Real Size</th>
+                    <th>Thumbnail</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -125,7 +122,7 @@
                                 </a>
                             @endif
                         </td>
-                        <td>{{$file->mime_type}}</td>
+                        <td>{{$file->mimeTypeToDescriptionForDisplay($file)}}</td>
                         @if($file->isDir())
                             <td></td>
                         @else
@@ -139,9 +136,17 @@
                                     <img src="{{route('projects.files.display', [$project, $file])}}"
                                          style="width: 12rem">
                                 </a>
-                            @elseif($file->isDir())
-                                <a class="action-link"
+                            @endif
+                        </td>
+                        <td>
+                            @if($file->isDir())
+                                <a class="action-link" title="Delete directory"
                                    href="{{route('projects.folders.destroy', [$project, $file])}}">
+                                    <i class="fas fa-fw fa-trash mr-2"></i>
+                                </a>
+                            @else
+                                <a class="action-link" title="Delete file"
+                                   href="{{route('projects.files.destroy', [$project, $file])}}">
                                     <i class="fas fa-fw fa-trash mr-2"></i>
                                 </a>
                             @endif
@@ -153,10 +158,13 @@
         </x-slot>
     </x-card>
 
+    @include('app.dialogs._copy-choose-project-dialog')
+
     @push('scripts')
         <script>
             $(document).ready(() => {
                 $('#files').DataTable({
+                    pageLength: 100,
                     stateSave: true,
                     columnDefs: [
                         {orderData: [3], targets: [2]},

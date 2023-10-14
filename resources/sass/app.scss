@@ -4,6 +4,7 @@
 @import 'variables';
 @import 'colors';
 @import 'drag-and-drop';
+@import 'switch';
 // Bootstrap
 @import '~bootstrap/scss/bootstrap';
 @import '~bootstrap-select/sass/bootstrap-select';
@@ -203,6 +204,10 @@ a.nav-link.action {
   font-size: 1.3em;
   color: white;
   //text-transform: uppercase;
+}
+
+.fs-14 {
+  font-size: 1.4em !important;
 }
 
 .fs-11 {

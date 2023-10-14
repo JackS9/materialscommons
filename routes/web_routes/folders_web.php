@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Web\Folders\ChooseProjectForCopyDestinationWebController;
+use App\Http\Controllers\Web\Folders\CopyToDestinationWebController;
 use App\Http\Controllers\Web\Folders\CreateFolderWebController;
 use App\Http\Controllers\Web\Folders\Datatables\GetFolderDatatableWebController;
 use App\Http\Controllers\Web\Folders\Datatables\GetRootFolderDatatableWebController;
@@ -9,8 +11,10 @@ use App\Http\Controllers\Web\Folders\Filter\DTGetFilesForUserFilterWebController
 use App\Http\Controllers\Web\Folders\Filter\ShowFilesFilteredForUserWebController;
 use App\Http\Controllers\Web\Folders\Filter\ShowFilterFilesByUserWebController;
 use App\Http\Controllers\Web\Folders\GotoFolderByPathInParam;
+use App\Http\Controllers\Web\Folders\IndexImagesWebController;
 use App\Http\Controllers\Web\Folders\MoveFilesWebController;
 use App\Http\Controllers\Web\Folders\RenameFolderWebController;
+use App\Http\Controllers\Web\Folders\ShowFoldersForCopyToProjectWebController;
 use App\Http\Controllers\Web\Folders\ShowFolderWebController;
 use App\Http\Controllers\Web\Folders\ShowRootFolderWebController;
 use App\Http\Controllers\Web\Folders\ShowUploadFilesWebController;
@@ -32,6 +36,17 @@ Route::get('/projects/{project}/folders', ShowRootFolderWebController::class)
 
 Route::get('/projects/{project}/folders/{folder}', ShowFolderWebController::class)
      ->name('projects.folders.show');
+
+Route::get('/projects/{project}/folders/what/{what}/{toFolder}/{copyType}/copy-to',
+    CopyToDestinationWebController::class)
+     ->name('projects.folders.copy-to');
+
+Route::get('/projects/{leftProject}/{leftFolder}/{rightProject}/{rightFolder}/show-for-copy', ShowFoldersForCopyToProjectWebController::class)
+     ->name('projects.folders.show-for-copy');
+
+Route::get('/projects/{project}/folders/{file}/{copyType}/choose-project',
+    ChooseProjectForCopyDestinationWebController::class)
+     ->name('projects.folders.choose-project');
 
 Route::get('/projects/{project}/folders/{directory}/upload', ShowUploadFilesWebController::class)
      ->name('projects.folders.upload');
@@ -59,6 +74,9 @@ Route::get('/projects/{project}/folders/{dir}/rename', RenameFolderWebController
      ->name('projects.folders.rename');
 Route::put('/projects/{project}/folders/{dir}/rename', UpdateRenameFolderWebController::class)
      ->name('projects.folders.rename.update');
+
+Route::get('/projects/{project}/folders/{folder}/index-images', IndexImagesWebController::class)
+     ->name('projects.folders.index-images');
 
 # Filters
 Route::get('/projects/{project}/filter/folders/by-user', ShowFilterFilesByUserWebController::class)

@@ -22,7 +22,7 @@ class RemoveBotsFromDownloadViewCountsCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Cleans up the downloand and view counts';
+    protected $description = 'Cleans up the download and view counts';
 
     private $badAddresses;
 
@@ -92,7 +92,9 @@ class RemoveBotsFromDownloadViewCountsCommand extends Command
         }
 
         $table = array();
+        $totalCount = 0;
         foreach ($countsById as $id => $count) {
+            $totalCount = $totalCount + $count;
             $dataset = Dataset::find($id);
             if (!is_null($dataset)) {
                 array_push($table, [Str::limit($dataset->name, 50, "..."), $count]);
@@ -100,6 +102,8 @@ class RemoveBotsFromDownloadViewCountsCommand extends Command
         }
 
         $this->table(["Dataset", "Count"], $table);
+
+        echo "  Total Count: {$totalCount}\n";
     }
 
     function tryGetHost($ip)

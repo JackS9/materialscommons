@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('pageTitle', 'Create Experiment')
+@section('pageTitle', "{$project->name} - Create Experiment")
 
 @section('nav')
     @include('layouts.navs.app.project')
@@ -39,13 +39,35 @@
                     <p style="margin-top: 8px">
                         Materials Commons can <b>optionally</b> import a spreadsheet to create your experiment. This
                         will set up the
-                        processes, samples and files.
+                        processes, samples and files. You can have it load a spreadsheet you've uploaded to this
+                        project, or you can specify a Google Sheet.
                     </p>
                     <p>
                         To see the format for the spreadsheet please read the
                         <a href="{{makeHelpUrl("reference/spreadsheets")}}" target="_blank">documentation</a>.
                     </p>
 
+                    <div class="form-group">
+                        <p>
+                            <b>If loading from a Google Sheet, you must set the share permissions to "Anyone with the link"
+                                under General Access in the share popup.</b>
+                        </p>
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-lg-4">
+                                    <div class="text-center">
+                                        <img src="{{asset('images/google-sheets-share.png')}}" class="img-fluid">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br/>
+                        <label for="url-id">Load Experiment From Google Sheet</label>
+                        <input class="form-control" name="sheet_url" type="url" placeholder="Google Sheet URL.."
+                               id="url-id">
+                    </div>
+                    <span><b>OR</b></span>
+                    <br>
                     <div class="row" style="margin-bottom: 10px">
                         <div class="col-10">
                             <a class="btn btn-info"

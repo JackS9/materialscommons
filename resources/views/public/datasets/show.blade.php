@@ -35,7 +35,31 @@
                             @endif
                         @endforeach
                     </div>
+                    @if($hasNotificationsForDataset)
+                        <a class="action-link ml-3"
+                           href="#"
+                           id="notification"
+                           data-toggle="tooltip"
+                           title="Stop notifications on dataset"
+                           hx-get="{{route('public.datasets.notifications.unmark-for-notification', [$dataset])}}"
+                           hx-target="#notification"
+                           hx-swap="outerHTML">
+                            <i class='fa-fw fas fa-bell yellow-4'></i>
+                        </a>
+                    @else
+                        <a class="action-link ml-3"
+                           href="#"
+                           id="notification"
+                           data-toggle="tooltip"
+                           title="Get notified when dataset is updated"
+                           hx-get="{{route('public.datasets.notifications.mark-for-notification', [$dataset])}}"
+                           hx-target="#notification"
+                           hx-swap="outerHTML">
+                            <i class="fas fa-fw fa-bell-slash"></i>
+                        </a>
+                    @endif
                 </div>
+
 
 
                 {{--                @if(auth()->user()->hasCommunities())--}}
@@ -87,4 +111,24 @@
             </script>
         @endpush
     @endisset
+
+    @php
+        $zipLoginRoute = route('login-for-dataset-zipfile-download', [$dataset]);
+        $zipCreateAccountRoute = '';
+
+        $globusLoginRoute = route('login-for-dataset-globus-download', [$dataset]);
+        $globusCreateAccountRoute = '';
+    @endphp
+
+    @include('app.dialogs.ds-download-dialog', [
+            'dialogId' => 'ds-download-zip',
+            'loginRoute' => $zipLoginRoute,
+            'createAccountRoute' => $zipCreateAccountRoute,
+    ])
+
+    @include('app.dialogs.ds-download-dialog', [
+            'dialogId' => 'ds-download-globus',
+            'loginRoute' => $globusLoginRoute,
+            'createAccountRoute' => $globusCreateAccountRoute,
+    ])
 @stop

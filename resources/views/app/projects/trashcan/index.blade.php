@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('pageTitle', 'Samples')
+@section('pageTitle', "{$project->name} - Trashcan")
 
 @section('nav')
     @include('layouts.navs.app.project')
@@ -88,6 +88,7 @@
         <script>
             $(document).ready(() => {
                 $('#trash').DataTable({
+                    pageLength: 100,
                     // stateSave: true,
                 });
             });

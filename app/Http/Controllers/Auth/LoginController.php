@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Traits\GetRequestParameterId;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use function view;
 
 class LoginController extends Controller
 {
+    use GetRequestParameterId;
+
     /*
     |--------------------------------------------------------------------------
     | Login Controller
@@ -21,7 +25,7 @@ class LoginController extends Controller
     */
 
     use AuthenticatesUsers;
-
+    use GetRequestParameterId;
 
     /**
      * Create a new controller instance.
@@ -33,11 +37,42 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
     }
 
+    /**
+     * Show the application's login form.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function showLoginForm()
+    {
+        $routeToUse = route('login');
+        if (request()->routeIs('login-for-upload')) {
+            $routeToUse = route('login-for-upload');
+        } elseif (request()->routeIs('login-for-dataset-zipfile-download')) {
+            $datasetId = $this->getParameterId('dataset');
+            $routeToUse = route('login-for-dataset-zipfile-download', [$datasetId]);
+        }
+
+        return view('auth.login', [
+            'routeToUse' => $routeToUse,
+        ]);
+    }
+
+
     public function redirectTo()
     {
         $routeName = Route::getCurrentRoute()->getName();
         if ($routeName == 'login-for-upload') {
             return route('public.publish.wizard.choose_create_or_select_project');
+        }
+
+        if ($routeName == 'login-for-dataset-zipfile-download') {
+            $datasetId = $this->getParameterId('dataset');
+            return route('public.datasets.overview.show', [$datasetId]);
+        }
+
+        if ($routeName == 'login-for-dataset-globus-download') {
+            $datasetId = $this->getParameterId('dataset');
+            return route('public.datasets.overview.show', [$datasetId]);
         }
 
         return route('dashboard');

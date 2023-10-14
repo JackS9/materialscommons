@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('pageTitle', 'Rename Folder')
+@section('pageTitle', "{$project->name} - Rename Folder")
 
 @section('nav')
     @include('layouts.navs.app.project')
@@ -9,7 +9,7 @@
 @section('content')
     @component('components.card')
         @slot('header')
-            Delete File: {{$dir->name}}
+            Rename Folder: {{$dir->name}}
         @endslot
 
         @slot('body')

@@ -2,8 +2,10 @@
 
 namespace App\Actions\Datasets;
 
+use App\Jobs\Datasets\SendPublishedDatasetUpdatedEmailJob;
 use App\Mail\Datasets\PublishedDatasetReadyMail;
 use App\Models\Dataset;
+use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
@@ -13,23 +15,27 @@ use Symfony\Component\Process\Process;
 
 class PublishDatasetAction2
 {
-    public function execute(Dataset $dataset, User $user)
+    public function execute(Dataset $dataset, User $user, $publishAsPrivate = false)
     {
         $now = Carbon::now();
+        $publishedAtField = $publishAsPrivate ? 'privately_published_at' : 'published_at';
         $dataset->update([
-            'published_at'       => $now,
+            $publishedAtField    => $now,
             'publish_started_at' => $now,
         ]);
         Bus::chain([
             function () use ($dataset) {
+                ini_set("memory_limit", "4096M");
                 $createDatasetFilesTableAction = new CreateDatasetFilesTableAction();
                 $createDatasetFilesTableAction->execute($dataset);
             },
             function () use ($dataset) {
+                ini_set("memory_limit", "4096M");
                 $replicator = new ReplicateDatasetEntitiesAndRelationshipsForPublishingAction();
                 $replicator->execute($dataset);
             },
             function () use ($dataset) {
+                ini_set("memory_limit", "4096M");
                 $createDatasetInGlobusAction = new CreateDatasetInGlobusAction();
                 $createDatasetInGlobusAction($dataset);
             },
@@ -51,6 +57,12 @@ class PublishDatasetAction2
                 $dataset->update(['publish_started_at' => null]);
                 $mail = new PublishedDatasetReadyMail($dataset, $user);
                 Mail::to($user)->send($mail);
+            },
+            function () use ($dataset) {
+                $dataset->load(['notifications.owner']);
+                $dataset->notifications->each(function (Notification $notification) use ($dataset) {
+                    SendPublishedDatasetUpdatedEmailJob::dispatch($dataset, $notification->owner);
+                });
             },
         ])->onQueue('globus')->dispatch();
     }

@@ -39,6 +39,7 @@ class EntityActivityImportTest extends TestCase
         $headers = $importer->getHeaders()->headersByIndex;
 
         // Spreadsheet headers
+        // Parent
         // P:Temperature(c)
         // p:stress relief time (hr)
         // S:wire composition
@@ -48,45 +49,91 @@ class EntityActivityImportTest extends TestCase
         // S:bead width (mm)
         // S:bead width (mm)
 
-        $this->assertEquals("c", $headers[0]->unit);
-        $this->assertEquals("Temperature", $headers[0]->name);
-        $this->assertEquals("activity", $headers[0]->attrType);
-
-        $this->assertEquals("hr", $headers[1]->unit);
-        $this->assertEquals("stress relief time", $headers[1]->name);
+        $this->assertEquals("c", $headers[1]->unit);
+        $this->assertEquals("Temperature", $headers[1]->name);
         $this->assertEquals("activity", $headers[1]->attrType);
 
-        $this->assertEquals("", $headers[2]->unit);
-        $this->assertEquals("wire composition", $headers[2]->name);
-        $this->assertEquals("entity", $headers[2]->attrType);
+        $this->assertEquals("hr", $headers[2]->unit);
+        $this->assertEquals("stress relief time", $headers[2]->name);
+        $this->assertEquals("activity", $headers[2]->attrType);
 
-        $this->assertEquals("mm", $headers[3]->unit);
-        $this->assertEquals("wire diameter", $headers[3]->name);
+        $this->assertEquals("", $headers[3]->unit);
+        $this->assertEquals("wire composition", $headers[3]->name);
         $this->assertEquals("entity", $headers[3]->attrType);
 
-        $this->assertEquals("g/cm^3", $headers[4]->unit);
-        $this->assertEquals("wire density", $headers[4]->name);
+        $this->assertEquals("mm", $headers[4]->unit);
+        $this->assertEquals("wire diameter", $headers[4]->name);
         $this->assertEquals("entity", $headers[4]->attrType);
 
-        $this->assertEquals('°C', $headers[5]->unit);
-        $this->assertEquals("stress relief temperature", $headers[5]->name);
-        $this->assertEquals("activity", $headers[5]->attrType);
+        $this->assertEquals("g/cm^3", $headers[5]->unit);
+        $this->assertEquals("wire density", $headers[5]->name);
+        $this->assertEquals("entity", $headers[5]->attrType);
 
-        $this->assertEquals("mm", $headers[6]->unit);
-        $this->assertEquals("bead width", $headers[6]->name);
-        $this->assertEquals("entity", $headers[6]->attrType);
+        $this->assertEquals('°C', $headers[6]->unit);
+        $this->assertEquals("stress relief temperature", $headers[6]->name);
+        $this->assertEquals("activity", $headers[6]->attrType);
 
         $this->assertEquals("mm", $headers[7]->unit);
         $this->assertEquals("bead width", $headers[7]->name);
         $this->assertEquals("entity", $headers[7]->attrType);
 
-        $this->assertEquals("", $headers[8]->unit);
-        $this->assertEquals("p1/d1", $headers[8]->name);
-        $this->assertEquals("file", $headers[8]->attrType);
+        $this->assertEquals("mm", $headers[8]->unit);
+        $this->assertEquals("bead width", $headers[8]->name);
+        $this->assertEquals("entity", $headers[8]->attrType);
 
         $this->assertEquals("", $headers[9]->unit);
-        $this->assertEquals("p1", $headers[9]->name);
+        $this->assertEquals("p1/d1", $headers[9]->name);
         $this->assertEquals("file", $headers[9]->attrType);
+
+        $this->assertEquals("", $headers[10]->unit);
+        $this->assertEquals("p1", $headers[10]->name);
+        $this->assertEquals("file", $headers[10]->attrType);
+    }
+
+    /** @test */
+    public function test_second_column_as_sample_attribute()
+    {
+        $this->withoutExceptionHandling();
+        $user = User::factory()->create();
+        $project = Project::factory()->create([
+            'owner_id' => $user->id,
+        ]);
+        $experiment = Experiment::factory()->create([
+            'owner_id'   => $user->id,
+            'project_id' => $project->id,
+        ]);
+
+        $importer = new EntityActivityImporter($project->id, $experiment->id, $user->id, new EtlState($user->id));
+        $importer->execute(Storage::disk('test_data')->path("etl/parent-as-sample-attribute.xlsx"));
+
+        // Check entities and entity attributes
+        $this->assertDatabaseHas('entities', ['project_id' => $project->id, 'name' => 'DOUBLES1']);
+        $this->assertEquals(1, Attribute::where('attributable_type', EntityState::class)->count());
+        $this->assertDatabaseHas('attributes', ['name' => 'wire composition']);
+    }
+
+    /** @test */
+    public function test_second_column_as_process_attribute()
+    {
+        $this->withoutExceptionHandling();
+        $user = User::factory()->create();
+        $project = Project::factory()->create([
+            'owner_id' => $user->id,
+        ]);
+        $experiment = Experiment::factory()->create([
+            'owner_id'   => $user->id,
+            'project_id' => $project->id,
+        ]);
+
+        $importer = new EntityActivityImporter($project->id, $experiment->id, $user->id, new EtlState($user->id));
+        $importer->execute(Storage::disk('test_data')->path("etl/parent-as-process-attribute.xlsx"));
+
+        $this->assertDatabaseHas('activities', ['name' => 'sem']);
+        $this->assertEquals(1, Activity::count());
+
+        $this->assertEquals(1, Attribute::where('attributable_type', Activity::class)->count());
+        $this->assertDatabaseHas('attributes',
+            ['name' => 'Temperature', 'attributable_type' => Activity::class]);
     }
 
     /** @test */
@@ -122,6 +169,51 @@ class EntityActivityImportTest extends TestCase
         $this->assertDatabaseHas('attributes',
             ['name' => 'stress relief time', 'attributable_type' => Activity::class]);
     }
+
+    /** @test */
+    public function test_simple_import_d1_formula()
+    {
+        $this->withoutExceptionHandling();
+        $user = User::factory()->create();
+        $project = Project::factory()->create([
+            'owner_id' => $user->id,
+        ]);
+        $experiment = Experiment::factory()->create([
+            'owner_id'   => $user->id,
+            'project_id' => $project->id,
+        ]);
+
+        $importer = new EntityActivityImporter($project->id, $experiment->id, $user->id, new EtlState($user->id));
+        $importer->execute(Storage::disk('test_data')->path("etl/d1_formula.xlsx"));
+
+        // Check entities and entity attributes
+        $this->assertDatabaseHas('entities', ['project_id' => $project->id, 'name' => 'DOUBLES1']);
+        $this->assertEquals(6, Attribute::where('attributable_type', EntityState::class)->count());
+        $this->assertDatabaseHas('attributes', ['name' => 'wire composition']);
+
+        $attrWith2Values = Attribute::where('name', 'bead width')->first();
+        $attrValue = AttributeValue::where('attribute_id', $attrWith2Values->id)->first();
+        $this->assertEquals(122.4135, $attrValue->val["value"]);
+
+        // Check that equation without cell references works
+        $attrWith2Values = Attribute::where('name', 'equation')->first();
+        $attrValue = AttributeValue::where('attribute_id', $attrWith2Values->id)->first();
+        $this->assertEquals(2, $attrValue->val["value"]);
+
+        // Check that equation with cell references works
+        $attrWith2Values = Attribute::where('name', 'reference')->first();
+        $attrValue = AttributeValue::where('attribute_id', $attrWith2Values->id)->first();
+        $this->assertEquals(3, $attrValue->val["value"]);
+
+        // Check activity and activity attributes
+        $this->assertDatabaseHas('activities', ['name' => 'sem']);
+        $this->assertEquals(1, Activity::count());
+
+        $this->assertEquals(2, Attribute::where('attributable_type', Activity::class)->count());
+        $this->assertDatabaseHas('attributes',
+            ['name' => 'stress relief time', 'attributable_type' => Activity::class]);
+    }
+
 
     /** @test */
     public function test_non_spreadsheet_named_file()
@@ -772,6 +864,53 @@ class EntityActivityImportTest extends TestCase
         $activity = Activity::with(['tags'])->where('name', 'sem')->first();
         $this->assertEquals(2, $activity->tags->count());
         $this->hasTags($entity->tags, ["heat treatment", "long"]);
+    }
+
+    /** @test */
+    public function test_load_single_calculation()
+    {
+        $this->withoutExceptionHandling();
+        $project = ProjectFactory::create();
+        $importer = new EntityActivityImporter($project->id, null, $project->owner_id,
+            new EtlState($project->owner_id));
+        $importer->execute(Storage::disk('test_data')->path('etl/single-calculation.xlsx'));
+        $this->assertEquals(1, Activity::count());
+        $this->assertEquals(0, Entity::count());
+        $this->assertEquals(3, Attribute::where('attributable_type', Activity::class)->count());
+        $this->assertDatabaseHas('attributes',
+            ['name' => 'Temperature', 'attributable_type' => Activity::class]);
+        $this->assertDatabaseHas('attributes',
+            ['name' => 'stress relief time', 'attributable_type' => Activity::class]);
+        $this->assertDatabaseHas('attributes',
+            ['name' => 'stress relief temperature', 'attributable_type' => Activity::class]);
+
+        // Check attribute values
+
+        // Temperature Attribute
+        $attr = Attribute::where('name', 'Temperature')->first();
+        $value = AttributeValue::where('attribute_id', $attr->id)->first();
+        $this->assertEquals(1, $value->val["value"]);
+        $this->assertEquals("c", $value->unit);
+
+        // stress relief time Attribute
+        $attr = Attribute::where('name', 'stress relief time')->first();
+        $value = AttributeValue::where('attribute_id', $attr->id)->first();
+        $this->assertEquals(7, $value->val["value"]);
+        $this->assertEquals("hr", $value->unit);
+
+        // stress relief temperature Attribute
+        $attr = Attribute::where('name', 'stress relief temperature')->first();
+        $value = AttributeValue::where('attribute_id', $attr->id)->first();
+        $this->assertEquals(50, $value->val["value"]);
+        $this->assertEquals("°C", $value->unit);
+
+        // Check that the activity is set up correctly
+        $this->assertEquals(1, Activity::count());
+
+        $c = Activity::where('name', 'calc1')->first();
+        $this->assertEquals("calc1", $c->name);
+        $this->assertEquals("calculation", $c->category);
+        $this->assertEquals("MonteCarlo", $c->atype);
     }
 
     private function hasTags($tags, $tagsItShouldHave)

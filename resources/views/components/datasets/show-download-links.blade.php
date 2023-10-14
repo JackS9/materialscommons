@@ -14,12 +14,6 @@
                 @endif
                 <span class="ml-1">({{formatBytes($dataset->zipfile_size)}})</span>
             </li>
-        @else
-            @if(!is_null($dataset->published_at))
-                <li class="list-inline-item">
-                    <span class="ml-1">Building zipfile...</span>
-                </li>
-            @endif
         @endif
 
         @if($dataset->globus_path_exists)
